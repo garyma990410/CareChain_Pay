@@ -1,0 +1,734 @@
+<title>CareChain Pay Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&display=swap">
+<style>
+/* Layout: caption bar on top; below it a life-stage rail, the phone App (本人／家屬) and the trustee workstation side by side.
+   Brand: 預約之印 seal (朱砂) on 晨光照護 palette. Stage colours T0→T4 follow the sky from dawn to night; three gates have fixed colours.
+   Under 1180px the trustee workstation and the phone switch by tab. All figures are 示意資料. */
+:root{
+  --lake:#1E4D5C; --seal:#C8372D; --sky:#5BA8C9; --sage:#8FC1B0; --sun:#F0A64B; --dusk:#E06C5A; --rice:#FBF6EF;
+  --g1:#2F7FA8; --g2:#3E8C78; --g3:#D98A2B; --g1s:#DCEEF6; --g2s:#DDEFE9; --g3s:#FCE6C8;
+  --bg:#EFE9DF; --surface:#FFFFFF; --surface2:#FBF6EF; --line:#E6DED2; --ink:#173540; --muted:#5F7177;
+  --teal:#3E8C78; --teal-soft:#DDEFE9; --gold:#F0A64B; --gold-soft:#FCE6C8; --navy-soft:#E8EEEF; --blue-soft:#DCEEF6; --dusk-soft:#FBE2DC;
+  --ok:#2E8C5A; --ok-soft:#E3F2EA; --warn:#9A5C08; --warn-soft:#FBEBCF; --crit:#9E2F4F; --crit-soft:#F5DDE4;
+  --on-gate:#FFFFFF; --hdr:#1E4D5C; --hdr-ink:#FFFFFF; --bezel:#13262C; --accent-ink:#2B6E73; --pri:#1E4D5C; --pri-ink:#FFFFFF;
+  --font:'Noto Sans TC','Noto Sans CJK TC','PingFang TC','Microsoft JhengHei',system-ui,sans-serif;
+  --serif:'Noto Serif TC','Noto Serif CJK TC','PMingLiU',serif;
+  --num:'Poppins','Noto Sans TC','Noto Sans CJK TC',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --g1:#6AB3DA; --g2:#6FC0A6; --g3:#F0A64B; --g1s:#173447; --g2s:#173A33; --g3s:#3A2A12;
+    --bg:#0C1A1F; --surface:#15282E; --surface2:#112228; --line:#28434B; --ink:#EAF1EF; --muted:#9DB0B3;
+    --teal:#6FC0A6; --teal-soft:#173A33; --gold:#F0A64B; --gold-soft:#3A2A12; --navy-soft:#1C333A; --blue-soft:#173447; --dusk-soft:#3D221D;
+    --ok:#5CC48E; --ok-soft:#133528; --warn:#F0B460; --warn-soft:#3A2A10; --crit:#F0819E; --crit-soft:#3E1C27;
+    --on-gate:#0C1A1F; --seal:#E8604F; --hdr:#1A4250; --bezel:#050C0F; --accent-ink:#8FD3C0; --pri:#8FC1B0; --pri-ink:#0C1A1F; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --g1:#6AB3DA; --g2:#6FC0A6; --g3:#F0A64B; --g1s:#173447; --g2s:#173A33; --g3s:#3A2A12;
+  --bg:#0C1A1F; --surface:#15282E; --surface2:#112228; --line:#28434B; --ink:#EAF1EF; --muted:#9DB0B3;
+  --teal:#6FC0A6; --teal-soft:#173A33; --gold:#F0A64B; --gold-soft:#3A2A12; --navy-soft:#1C333A; --blue-soft:#173447; --dusk-soft:#3D221D;
+  --ok:#5CC48E; --ok-soft:#133528; --warn:#F0B460; --warn-soft:#3A2A10; --crit:#F0819E; --crit-soft:#3E1C27;
+  --on-gate:#0C1A1F; --seal:#E8604F; --hdr:#1A4250; --bezel:#050C0F; --accent-ink:#8FD3C0; --pri:#8FC1B0; --pri-ink:#0C1A1F; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.5;padding-inline:16px;padding-block:18px 32px;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+.num,.big,.mid{font-family:var(--num);font-variant-numeric:tabular-nums}
+.wrap{max-width:1520px;margin-inline:auto;display:flex;flex-direction:column;gap:16px}
+
+/* caption bar */
+.cap{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 18px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{flex:none}
+.brand b{display:block;font-family:var(--num);font-weight:600;font-size:16px;letter-spacing:-.01em}
+.brand b em{font-style:normal;color:var(--seal)}
+.brand span{display:block;font-size:11px;color:var(--muted);letter-spacing:.06em}
+.capmsg{flex:1 1 340px;min-width:0}
+.stg{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:.04em;padding:3px 11px 3px 4px;border-radius:999px;background:var(--stage-soft,var(--navy-soft));color:var(--ink)}
+.stg i{width:16px;height:16px;border-radius:50%;background:var(--stage,var(--lake));display:block}
+.capmsg h2{margin:5px 0 2px;font-family:var(--serif);font-weight:900;font-size:20px;line-height:1.3;text-wrap:balance}
+.capmsg p{margin:0;color:var(--muted);font-size:13px;max-width:78ch}
+.ctrls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600}
+.btn:hover{border-color:var(--lake)}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:var(--pri-ink)}
+.btn[disabled]{opacity:.45;cursor:default}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface2)}
+.seg button{border:0;background:transparent;padding:7px 12px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--pri);color:var(--pri-ink)}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--gold-soft);color:var(--warn);letter-spacing:.04em;white-space:nowrap}
+
+/* shell */
+.shell{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.rail{flex:0 0 250px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:14px}
+.rail h3{margin:0;font-family:var(--serif);font-size:15px;font-weight:900}
+.grp{display:flex;flex-direction:column;gap:4px;position:relative}
+.grp .gl{font-size:12px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:7px}
+.grp .gl i{width:12px;height:12px;border-radius:50%;display:block;flex:none}
+.stp{display:flex;gap:9px;align-items:flex-start;text-align:left;border:1px solid transparent;background:transparent;border-radius:10px;padding:7px 8px;width:100%}
+.stp:hover{background:var(--surface2)}
+.stp i{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-style:normal;font-family:var(--num);font-size:11px;font-weight:600;color:var(--muted);margin-top:1px}
+.stp span{font-size:13px;line-height:1.35}
+.stp.on{background:var(--stage-soft);border-color:var(--stage)}
+.stp.on i{background:var(--stage);border-color:var(--stage);color:#fff}
+.stp.done i{background:var(--pri);border-color:var(--pri);color:var(--pri-ink)}
+.shell.focus .rail{display:none}
+.phone-col{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+.colcap{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--muted)}
+.tw-col{flex:1 1 600px;min-width:0;display:flex;flex-direction:column;gap:10px}
+
+/* phone */
+.phone{width:min(392px,100%);height:812px;background:var(--bezel);border-radius:50px;padding:11px;box-shadow:0 18px 40px rgba(19,38,44,.28)}
+.screen{height:100%;border-radius:40px;overflow:hidden;background:var(--surface2);display:flex;flex-direction:column;position:relative}
+.sbar{height:34px;background:var(--hdr);color:var(--hdr-ink);display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-family:var(--num);font-size:12px;font-weight:600;flex:none}
+.sbar .dots{display:flex;gap:5px;align-items:center}
+.sbar .dots i{display:block;width:16px;height:8px;border-radius:2px;border:1.5px solid rgba(255,255,255,.8)}
+.ahdr{background:var(--hdr);color:var(--hdr-ink);padding:6px 18px 16px;display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex:none}
+.ahdr small{display:flex;align-items:center;gap:6px;font-family:var(--num);font-size:11px;font-weight:600;letter-spacing:.02em;opacity:.9;margin-bottom:3px}
+.ahdr h1{margin:0;font-family:var(--serif);font-weight:900;font-size:19px;line-height:1.25}
+.who{font-size:11px;background:rgba(255,255,255,.14);padding:4px 10px;border-radius:999px;white-space:nowrap}
+.abody{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+.abody>*{flex:none}
+.nav{flex:none;display:grid;grid-template-columns:repeat(6,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 4px 12px}
+.nav button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);padding:3px 0;border-radius:10px;font-weight:500}
+.nav button .ib{width:34px;height:34px;border-radius:50%;display:grid;place-items:center}
+.nav button svg{width:22px;height:22px}
+.nav button.on{color:var(--ink);font-weight:700}
+.nav button.on .ib{background:var(--blue-soft)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.card h4{margin:0 0 10px;font-size:13px;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+.lbl{font-size:11px;color:var(--muted)}
+.big{font-size:27px;font-weight:600;line-height:1.15;letter-spacing:-.01em}
+.mid{font-size:19px;font-weight:600;line-height:1.2}
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 13px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.tile.hero{grid-column:1/-1;background:var(--lake);border-color:var(--lake);color:#fff;position:relative;overflow:hidden}
+.tile.hero .lbl{color:#CFE4E6}
+.tile.hero::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(240,166,75,.55),rgba(240,166,75,0) 70%)}
+.tile.warn{background:var(--gold-soft);border-color:transparent}
+.tile.mo{background:var(--blue-soft);border-color:transparent}
+.src{display:flex;flex-direction:column;gap:3px;margin-bottom:10px}
+.src:last-child{margin-bottom:0}
+.src .r{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.src .r b{font-weight:600}
+.bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;border:1px solid var(--line)}
+.bar>i{display:block;height:100%;border-radius:99px}
+.note{font-size:11px;color:var(--muted);line-height:1.5}
+.ai{border:1px solid var(--g1);background:var(--g1s);border-radius:16px;padding:12px 13px;display:flex;flex-direction:column;gap:8px}
+.ai .t{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ai b{font-size:13px;display:flex;align-items:center;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:500}
+.chip.no{border-color:var(--crit);color:var(--crit);background:transparent}
+.chip.yes{border-color:var(--g1);color:var(--g1)}
+.sw{width:42px;height:24px;border-radius:99px;border:0;background:var(--line);position:relative;flex:none}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .18s}
+.sw[aria-checked="true"]{background:var(--g1)}
+.sw[aria-checked="true"]::after{transform:translateX(18px)}
+.cta{border:0;border-radius:14px;background:var(--pri);color:var(--pri-ink);padding:12px;font-weight:700;font-size:14px;width:100%}
+.cta.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.cta[disabled]{opacity:.45}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.field .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.field .top b{font-size:15px;font-family:var(--num);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--lake);height:24px}
+.seg2{display:flex;border:1px solid var(--line);border-radius:10px;padding:3px;background:var(--surface2);gap:3px}
+.seg2 span{flex:1;text-align:center;font-size:12px;padding:6px;border-radius:8px;font-weight:600;color:var(--muted)}
+.seg2 span.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.res{border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:14px;display:flex;flex-direction:column;gap:10px}
+.rbar{display:grid;grid-template-columns:78px 1fr 62px;gap:8px;align-items:center;font-size:12px}
+.rbar .bar{height:11px}
+.rbar em{font-style:normal;text-align:right;font-weight:600;font-family:var(--num)}
+.plan{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
+.plan>button{width:100%;border:0;background:transparent;text-align:left;padding:0;display:block}
+.plan .ph{padding:9px 13px;color:#fff;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.plan .ph span:first-child{display:flex;align-items:center;gap:8px}
+.plan .pb{padding:11px 13px;display:flex;flex-direction:column;gap:7px;font-size:13px}
+.plan .pb p{margin:0}
+.plan .pb .k{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:1px}
+.plan .pd{padding:10px 13px 13px;background:var(--surface2);border-top:1px dashed var(--line);font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:8px}
+.tag{align-self:flex-start;font-size:11px;font-weight:700;padding:3px 10px;border-radius:7px}
+.row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line);align-items:center}
+.row:last-child{border-bottom:0}
+.row span:first-child{color:var(--muted);flex:none}
+.row b{font-weight:600;text-align:right}
+.stepper{display:inline-flex;align-items:center;gap:8px}
+.stepper button{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.role{border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--surface2);display:flex;flex-direction:column;gap:4px;font-size:12px}
+.role b{font-size:13px}
+.st3{display:flex;flex-direction:column;gap:8px}
+.st3 .it{display:flex;gap:10px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:14px;background:var(--surface2)}
+.st3 .it.ok{border-color:var(--gc);background:var(--gcs)}
+.st3 .it.fail{border-color:var(--crit);background:var(--crit-soft)}
+.st3 .n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-family:var(--num);font-weight:600;font-size:13px;background:var(--surface);border:2px solid var(--gc);color:var(--gc)}
+.st3 .it.ok .n{background:var(--gc);color:var(--on-gate)}
+.st3 .it.fail .n{background:var(--crit);border-color:var(--crit);color:#fff}
+.st3 .tx{flex:1;min-width:0}
+.st3 .tx b{display:block;font-size:13px}
+.st3 .tx small{color:var(--muted);font-size:11px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)}
+.p-wait{background:var(--navy-soft);color:var(--muted)}
+.p-warn{background:var(--warn-soft);color:var(--warn)}
+.p-crit{background:var(--crit-soft);color:var(--crit)}
+.p-teal{background:var(--g2s);color:var(--g2)}
+.prog{display:flex;flex-direction:column}
+.prog .s{display:flex;gap:11px;position:relative;padding-bottom:12px}
+.prog .s:last-child{padding-bottom:0}
+.prog .s::before{content:"";position:absolute;left:11px;top:24px;bottom:0;width:2px;background:var(--line)}
+.prog .s:last-child::before{display:none}
+.prog .d{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-family:var(--num);font-size:12px;font-weight:600;background:var(--line);color:var(--muted);z-index:1}
+.prog .s.ok .d{background:var(--ok);color:#fff}
+.prog .s.active .d{background:var(--sun);color:#2A1600}
+.prog .s.fail .d{background:var(--crit);color:#fff}
+.prog b{font-size:13px;display:block;line-height:1.3}
+.prog small{font-size:11px;color:var(--muted)}
+.banner{border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5;display:flex;gap:10px;align-items:center}
+.banner.i{background:var(--navy-soft);color:var(--ink)}
+.banner.w{background:var(--warn-soft);color:var(--warn)}
+.banner.c{background:var(--crit-soft);color:var(--crit)}
+.banner.o{background:var(--ok-soft);color:var(--ok)}
+.tl{display:flex;flex-direction:column}
+.tl .e{display:grid;grid-template-columns:54px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px}
+.tl .e:last-child{border-bottom:0}
+.tl .e time{font-family:var(--num);font-size:11px;font-weight:600;padding-top:1px;display:flex;align-items:center;gap:5px;color:var(--muted)}
+.tl .e time i{width:9px;height:9px;border-radius:50%;display:block}
+.tl .e b{font-weight:600}
+
+/* approval stamp */
+.stamp{flex:none;display:block;width:86px;height:86px;color:var(--seal)}
+.stamp.pop{animation:stamp .42s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes stamp{0%{transform:scale(1.9) rotate(-18deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+
+/* trustee workstation */
+.tw{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 12px 30px rgba(19,38,44,.12)}
+.tw-bar{background:var(--hdr);color:var(--hdr-ink);padding:10px 16px;display:flex;align-items:center;gap:10px}
+.tw-bar b{font-size:13px;font-family:var(--num);font-weight:600}
+.tw-bar b em{font-style:normal;font-family:var(--font);font-weight:700}
+.tw-bar span{margin-left:auto;font-size:11px;opacity:.8}
+.tw-body{padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--surface2)}
+.strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.strip .m{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;gap:10px;align-items:center;min-width:0}
+.strip .m>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.strip .m .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strip .m b{font-size:17px;line-height:1.2;font-family:var(--num);font-weight:600}
+.strip .m svg{flex:none}
+.tgrid{display:grid;grid-template-columns:minmax(0,250px) minmax(0,1fr);gap:12px;align-items:start}
+.queue{display:flex;flex-direction:column;gap:8px}
+.qi{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:5px;width:100%}
+.qi.on{border-color:var(--lake);box-shadow:0 0 0 2px var(--blue-soft)}
+.qi .a{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
+.qi b{font-size:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel h5{margin:0;font-size:15px}
+.chk{display:flex;flex-direction:column}
+.chk .c{display:grid;grid-template-columns:22px 1fr auto;gap:9px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.chk .c:last-child{border-bottom:0}
+.chk .c .ic{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--ok)}
+.chk .c.x .ic{background:var(--crit)}
+.chk .c .ic svg{width:12px;height:12px}
+.chk .c small{color:var(--muted);font-size:11px;white-space:nowrap}
+.chk .g{font-size:11px;font-weight:700;letter-spacing:.06em;padding-top:8px;display:flex;align-items:center;gap:6px}
+.chk .g i{width:10px;height:10px;border-radius:3px;display:block}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts .btn{flex:1 1 120px}
+.btn.ok{background:var(--lake);border-color:var(--lake);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+:root[data-theme="dark"] .btn.ok{background:var(--sage);border-color:var(--sage);color:#0C1A1F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.ok{background:var(--sage);border-color:var(--sage);color:#0C1A1F}}
+.btn.no{border-color:var(--crit);color:var(--crit);background:transparent}
+.acts .btn.ok{flex:2 1 190px;white-space:nowrap}
+.gate{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.gate .g1{min-width:0;border:1.5px solid var(--gc);border-radius:10px;padding:7px 10px;font-size:12px;display:flex;gap:8px;align-items:center;background:var(--gc);color:var(--on-gate);font-weight:600}
+.gate .g1.x{border-color:var(--crit);background:var(--crit-soft);color:var(--crit)}
+.empty{border:1px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.paidrow{display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:8px 14px 8px 8px}
+.paidrow p{margin:0;font-size:12px;color:var(--ink);line-height:1.5}
+.paidrow p b{color:var(--ok)}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--lake);color:#fff;padding:9px 16px;border-radius:99px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:20;max-width:90vw}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:1179px){
+  .rail{flex:1 1 100%}
+  .rail .grp{display:none}
+  .shell[data-view="both"] .tw-col{display:none}
+  .seg .both{display:none}
+  .phone-col,.tw-col{flex:1 1 100%;align-items:center}
+  .shell[data-view="trustee"] .phone-col{display:none}
+  .shell[data-view="app"] .tw-col{display:none}
+  .tw-col{align-items:stretch}
+  .shell.focus .rail{display:none}
+}
+@media (max-width:620px){
+  .strip{grid-template-columns:1fr 1fr}
+  .tgrid{grid-template-columns:1fr}
+  .phone{height:760px;border-radius:42px}
+}
+@media (prefers-reduced-motion:reduce){.toast,.sw::after{transition:none}.stamp.pop{animation:none}}
+</style>
+
+<div class="wrap">
+  <div class="cap">
+    <div class="brand"><span id="brandseal"></span><div><b>CareChain<em> Pay</em></b><span>照護支付鏈・互動 DEMO・示意資料</span></div></div>
+    <div class="capmsg" aria-live="polite">
+      <div class="stg" id="c-stage"></div>
+      <h2 id="c-title"></h2>
+      <p id="c-say"></p>
+    </div>
+    <div class="ctrls">
+      <div class="seg" role="group" aria-label="檢視">
+        <button data-a="view" data-v="both" class="both" aria-pressed="true">並排</button>
+        <button data-a="view" data-v="app" aria-pressed="false">本人／家屬 App</button>
+        <button data-a="view" data-v="trustee" aria-pressed="false">受託人後台</button>
+      </div>
+      <button class="btn" data-a="prev" aria-label="上一步">← 上一步</button>
+      <button class="btn pri" data-a="next" id="b-next">下一步 →</button>
+      <button class="btn" data-a="auto" id="b-auto">自動播放</button>
+      <button class="btn" data-a="focus" id="b-focus">專注模式</button>
+    </div>
+  </div>
+
+  <div class="shell" id="shell" data-view="both">
+    <aside class="rail" aria-label="情境步驟">
+      <h3>王先生的照護資金旅程</h3>
+      <div id="steps" style="display:flex;flex-direction:column;gap:12px"></div>
+      <p class="note" style="margin:0">←／→ 鍵可切換步驟。畫面可直接點擊操作，例如調整試算滑桿、展開方案、在後台核准或退回案件。</p>
+    </aside>
+
+    <div class="phone-col">
+      <div class="colcap">本人／家屬 App</div>
+      <div class="phone">
+        <div class="screen">
+          <div class="sbar"><span>9:41</span><span class="dots"><i></i></span></div>
+          <div id="ahead"></div>
+          <div class="abody" id="abody"></div>
+          <nav class="nav" id="nav" aria-label="App 導覽"></nav>
+        </div>
+      </div>
+    </div>
+
+    <div class="tw-col">
+      <div class="colcap" style="text-align:left">受託人覆核後台</div>
+      <div class="tw" id="tw"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var fmt=function(n){return 'NT$'+Math.round(n).toLocaleString('en-US')};
+var GOV=15607, BENEFIT=18580, ASSET=3280000, INS_PAY=900000;
+
+/* ---------- brand & icons ---------- */
+var IC={"overview": ["<rect x=\"3.5\" y=\"3.5\" width=\"7\" height=\"7\" rx=\"1.8\"/><rect x=\"13.5\" y=\"3.5\" width=\"7\" height=\"7\" rx=\"1.8\"/><rect x=\"3.5\" y=\"13.5\" width=\"7\" height=\"7\" rx=\"1.8\"/>", "<rect x=\"13.5\" y=\"13.5\" width=\"7\" height=\"7\" rx=\"1.8\"/>"], "calculator": ["<rect x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"2.5\"/><path d=\"M8.5 7h7\"/>", "<path d=\"M8.5 11.5h1.5M14 11.5h1.5M8.5 15.5h1.5M14 15.5h1.5\"/>"], "compare": ["<rect x=\"3\" y=\"4.5\" width=\"7.5\" height=\"15\" rx=\"2\"/><rect x=\"13.5\" y=\"4.5\" width=\"7.5\" height=\"15\" rx=\"2\"/>", "<path d=\"M5.5 9h2.5M5.5 12.5h2.5M16 9h2.5M16 12.5h2.5\"/>"], "vault": ["<rect x=\"3\" y=\"4\" width=\"18\" height=\"15\" rx=\"3\"/><path d=\"M6.5 19v2M17.5 19v2\"/>", "<circle cx=\"12\" cy=\"11.5\" r=\"3.2\"/><path d=\"M12 8.3V7M12 16v-1.3\"/>"], "card": ["<rect x=\"2.5\" y=\"5.5\" width=\"19\" height=\"13\" rx=\"2.5\"/><path d=\"M2.5 9.5h19\"/>", "<path d=\"M6 14.5h4\"/>"], "chain": ["<path d=\"M10 14l-1.5 1.5a3.2 3.2 0 0 1-4.5-4.5l3-3a3.2 3.2 0 0 1 4.5 0\"/><path d=\"M14 10l1.5-1.5a3.2 3.2 0 0 1 4.5 4.5l-3 3a3.2 3.2 0 0 1-4.5 0\"/>", "<path d=\"M9.5 14.5l5-5\"/>"], "shield": ["<path d=\"M12 3l7 2.8v5.4c0 4.4-3 8.1-7 9.8-4-1.7-7-5.4-7-9.8V5.8z\"/>", "<path d=\"M8.5 12l2.4 2.4 4.6-4.8\"/>"], "contract": ["<path d=\"M6 3h9l4 4v14H6z\"/><path d=\"M15 3v4h4\"/><path d=\"M9 10.5h7M9 13.5h5\"/>", "<rect x=\"12\" y=\"16\" width=\"4.5\" height=\"3\" rx=\".8\"/>"], "receipt": ["<path d=\"M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5z\"/><path d=\"M9 7.5h6M9 11h6\"/>", "<path d=\"M9.3 14.8l1.6 1.6 3.3-3.4\"/>"], "whitelist": ["<rect x=\"4\" y=\"3\" width=\"16\" height=\"18\" rx=\"2.5\"/><path d=\"M11 8h5.5M11 12h5.5M11 16h5.5\"/>", "<circle cx=\"7.9\" cy=\"8\" r=\"1.1\"/><circle cx=\"7.9\" cy=\"12\" r=\"1.1\"/><circle cx=\"7.9\" cy=\"16\" r=\"1.1\"/>"], "trustee": ["<circle cx=\"9\" cy=\"7.5\" r=\"3.2\"/><path d=\"M3 20c.6-3.6 3-5.6 6-5.6 1.5 0 2.8.5 3.8 1.3\"/>", "<path d=\"M17.5 9.5a1.9 1.9 0 1 1 0 .1zM16.3 12h2.4v2.2h-2.4zM14 14.2h7v2.3h-7zM14 19h7\"/>"], "ai": ["<path d=\"M4 5h16v11H10l-6 4z\"/>", "<path d=\"M12 7.3l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1z\"/>"], "family": ["<path d=\"M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z\"/>", "<circle cx=\"12\" cy=\"12\" r=\"3\"/>"], "elder": ["<circle cx=\"9.5\" cy=\"5\" r=\"2.5\"/><path d=\"M9.5 8.5c-2.2 0-3.5 1.7-3.5 4v3h2V21h3v-5.5h2v-3c0-2.3-1.3-4-3.5-4z\"/>", "<path d=\"M17.5 12v9M17.5 12a1.8 1.8 0 0 0-3.2-.6\"/>"], "policy": ["<path d=\"M5 3h9l4 4v14H5z\"/><path d=\"M14 3v4h4\"/>", "<path d=\"M14.5 14a3.5 3.5 0 1 1-1.1-2.6M13.6 9.5v2h-2\"/>"], "wallet": ["<rect x=\"3\" y=\"7\" width=\"18\" height=\"13\" rx=\"2.5\"/><path d=\"M5.5 7l9.5-3.5 1.2 3.5\"/>", "<path d=\"M15.5 11.2v3.3M15.5 17v.3\"/>"], "bank": ["<path d=\"M3 9.5L12 4l9 5.5z\"/><path d=\"M5.5 10.5v7M10 10.5v7M14 10.5v7M18.5 10.5v7M3 20.5h18\"/>", "<circle cx=\"12\" cy=\"7.4\" r=\"1\"/>"], "carehome": ["<path d=\"M4 11l8-7 8 7v9.5H4z\"/>", "<path d=\"M12 17.8c-2.2-1.4-3.4-2.7-3.4-4a1.7 1.7 0 0 1 3.4-.5 1.7 1.7 0 0 1 3.4.5c0 1.3-1.2 2.6-3.4 4z\"/>"], "calendar": ["<rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15.5\" rx=\"2.5\"/><path d=\"M3.5 9.5h17M8 3v4M16 3v4\"/>", "<path d=\"M8.5 14.5l2 2 4-4\"/>"], "coins": ["<ellipse cx=\"9\" cy=\"7\" rx=\"5.5\" ry=\"2.5\"/><path d=\"M3.5 7v4c0 1.4 2.5 2.5 5.5 2.5M3.5 11v4c0 1.4 2.5 2.5 5.5 2.5\"/>", "<circle cx=\"16\" cy=\"15\" r=\"4.5\"/><path d=\"M16 13v4\"/>"], "target": ["<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><circle cx=\"12\" cy=\"12\" r=\"4.8\"/>", "<circle cx=\"12\" cy=\"12\" r=\"1.3\"/><path d=\"M12 12l6-6M15.5 5.5H18.5V8.5\"/>"], "layers": ["<path d=\"M12 3.5l8.5 4.5L12 12.5 3.5 8z\"/><path d=\"M3.5 12l8.5 4.5 8.5-4.5\"/>", "<path d=\"M3.5 16l8.5 4.5 8.5-4.5\"/>"]};
+var SM={check:'<path d="M3.5 8.5l3 3 6-6.5"/>',x:'<path d="M4 4l8 8M12 4l-8 8"/>'};
+function ic(n,sw){return '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="'+(sw||1.8)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+SM[n]+'</svg>'}
+/* style 乙: white-filled shape, ink outline, one accent stroke; optional tinted circle */
+function icon(n,acc,sz,tint){var d=IC[n];sz=sz||22;
+  var g='<g style="fill:var(--surface);stroke:var(--ink)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+d[0]+'</g><g style="fill:none;stroke:'+(acc||'var(--g1)')+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">'+d[1]+'</g>';
+  if(tint)return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" style="fill:'+tint+'"/><g transform="translate(4.8 4.8) scale(.6)">'+g+'</g></svg>';
+  return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" aria-hidden="true">'+g+'</svg>'}
+function SEAL(sz){return '<svg width="'+sz+'" height="'+sz+'" viewBox="12 12 96 96" aria-hidden="true"><rect x="12" y="12" width="96" height="96" rx="22" fill="#C8372D"/><rect x="19" y="19" width="82" height="82" rx="16" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.6"/><path d="M79.5 40.5A28 28 0 1 0 79.5 79.5" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round"/><path d="M50 60.5l9 9 23-25" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+function STAMP(pop){return '<svg class="stamp'+(pop?' pop':'')+'" viewBox="0 0 360 360" role="img" aria-label="已核准"><g transform="rotate(-9 180.0 180.0)"><rect x="6.159999999999997" y="104.56" width="347.68" height="150.88" rx="22" fill="none" stroke="currentColor" stroke-width="12"/><rect x="18.159999999999997" y="116.56" width="323.68" height="126.88" rx="14" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M48.071999999999996 143.01600000000002 48.9 145.59199999999998H105.02V170.984H63.896V159.94400000000002C66.104 159.57600000000002 66.65599999999999 158.748 66.93199999999999 157.55200000000002L52.94799999999999 156.356V202.54C52.94799999999999 214.40800000000002 60.032 218.272 74.568 218.272H104.192C123.788 218.272 128.204 214.868 128.204 209.808C128.204 207.692 126.64 206.864 121.856 205.392L121.764 189.844H120.844C119.00399999999999 195.548 116.336 202.448 114.588 204.93200000000002C112.74799999999999 207.416 109.804 207.876 103.548 207.876H74.292C66.84 207.876 63.896 206.68 63.896 202.72400000000002V173.56H105.02V181.104H106.768C110.63199999999999 181.104 116.06 178.712 116.152 177.976V147.8C118.268 147.34 119.648 146.42000000000002 120.292 145.59199999999998L109.252 137.128L104.008 143.01600000000002ZM186.348 134.644 185.612 135.19600000000003C188.372 138.692 191.316 144.12 191.96 149.08800000000002C201.43599999999998 156.172 211.188 137.95600000000002 186.348 134.644ZM213.764 143.568 208.336 151.204H168.96L169.696 153.872H186.716C184.324 159.668 179.07999999999998 168.684 174.848 171.812C174.01999999999998 172.272 172.088 172.64000000000001 172.088 172.64000000000001L175.676 183.588C176.688 183.22 177.7 182.484 178.528 181.196C184.508 179.54000000000002 190.028 177.792 194.628 176.32C186.072 187.268 175.86 195.45600000000002 164.268 201.988L165.004 203.368C184.876 196.1 200.792 184.96800000000002 213.57999999999998 166.936C215.88 167.304 216.892 166.936 217.536 166.01600000000002L205.392 159.484C203.0 164.084 200.42399999999998 168.316 197.664 172.272L180.184 172.732C186.348 168.684 193.248 162.796 197.48 157.92000000000002C199.32 158.012 200.332 157.276 200.608 156.264L193.156 153.872H221.03199999999998C222.41199999999998 153.872 223.42399999999998 153.412 223.608 152.4C220.01999999999998 148.812 213.764 143.568 213.764 143.568ZM223.608 183.404 211.00400000000002 176.32C198.86 198.308 181.93200000000002 210.912 161.968 219.836L162.52 221.216C178.06799999999998 216.984 191.40800000000002 211.004 203.184 201.528C207.048 206.588 211.28 213.12 212.93599999999998 219.008C223.42399999999998 226.276 231.888 207.14000000000001 205.668 199.412C210.54399999999998 195.088 215.144 190.212 219.46800000000002 184.416C221.768 184.784 222.872 184.416 223.608 183.404ZM165.74 150.928 161.232 157.092H159.944V138.692C162.428 138.324 163.072 137.496 163.256 136.11599999999999L149.824 134.828V157.092H136.944L137.68 159.76H148.812C146.60399999999998 173.836 142.464 188.464 135.564 199.136L136.668 200.148C141.912 195.45600000000002 146.236 190.12 149.824 184.324V221.4H151.848C155.62 221.4 159.944 219.192 159.944 218.18V171.812C162.152 175.952 163.992 181.472 164.084 185.98000000000002C171.076 192.788 179.724 178.16 159.944 169.512V159.76H171.536C172.824 159.76 173.652 159.3 173.928 158.288C170.892 155.252 165.74 150.928 165.74 150.928ZM283.04 134.46 282.212 134.92000000000002C284.696 138.96800000000002 286.72 144.948 286.444 150.284C295.552 159.116 307.604 140.808 283.04 134.46ZM233.636 138.96800000000002 232.808 139.52C236.672 143.844 240.536 150.56 241.364 156.54000000000002C251.392 164.176 260.592 144.02800000000002 233.636 138.96800000000002ZM235.476 193.248C234.464 193.248 231.336 193.248 231.336 193.248V194.996C233.268 195.18 234.832 195.548 236.028 196.46800000000002C238.236 197.848 238.604 206.036 236.948 215.052C237.776 218.45600000000002 239.984 219.65200000000002 242.192 219.65200000000002C246.88400000000001 219.65200000000002 250.012 216.524 250.196 212.108C250.38 204.288 246.516 201.344 246.424 196.56C246.332 194.168 246.976 190.672 247.804 187.268C249.0 181.84 255.624 158.656 259.396 146.144L257.924 145.776C240.26 187.544 240.26 187.544 238.236 191.316C237.224 193.248 236.856 193.248 235.476 193.248ZM306.776 146.328 301.164 153.872H273.564C275.772 149.364 277.612 145.04000000000002 279.084 141.084C281.384 140.9 282.12 140.072 282.488 139.06L267.584 135.012C265.376 148.628 259.396 169.144 250.564 182.76L251.484 183.588C255.44 180.276 259.028 176.412 262.248 172.272V221.4H264.088C269.24 221.4 272.368 219.008 272.368 218.272V213.856H315.7C316.988 213.856 318.0 213.39600000000002 318.18399999999997 212.38400000000001C314.41200000000003 208.704 307.88 203.46 307.88 203.46L302.084 211.28H294.908V194.26H312.204C313.492 194.26 314.41200000000003 193.8 314.688 192.788C311.192 189.292 305.212 184.232 305.212 184.232L299.968 191.592H294.908V175.308H312.204C313.492 175.308 314.41200000000003 174.848 314.688 173.836C311.192 170.43200000000002 305.212 165.28 305.212 165.28L299.968 172.732H294.908V156.54000000000002H314.32C315.608 156.54000000000002 316.528 156.08 316.804 155.068C313.032 151.48000000000002 306.776 146.328 306.776 146.328ZM272.368 211.28V194.26H284.696V211.28ZM272.368 191.592V175.308H284.696V191.592ZM272.368 172.732V156.54000000000002H284.696V172.732Z" fill="currentColor"/></g></svg>'}
+var STC={T0:'#5BA8C9',T1:'#8FC1B0',T2:'#F0A64B',T3:'#E06C5A',T4:'#1E4D5C'};
+function soft(c){return 'color-mix(in srgb, '+c+' 24%, var(--surface))'}
+
+/* ---------- state ---------- */
+var S;
+function fresh(){
+  return {
+    view:S?S.view:'both', focus:S?S.focus:false,
+    screen:'dash', step:0, ai:true, spend:35000, years:7, plan:null, cap:25000,
+    trustSigned:false, insured:false, submitted:false, revoked:false, trustBal:0, sel:'C-001', pop:false,
+    cases:[
+      {id:'C-001',org:'安心居家（示意）',period:'9/1–9/15',item:'居家服務',amount:18600,wl:true,dup:false,final:null},
+      {id:'C-002',org:'幸福到宅（示意）',period:'9/1–9/15',item:'居家服務',amount:28400,wl:true,dup:false,final:null},
+      {id:'C-003',org:'未登錄收款方（示意）',period:'9/1–9/15',item:'居家服務',amount:12000,wl:false,dup:false,final:null}
+    ],
+    log:[
+      {t:'T0',who:'本人',txt:'授權盤點保單與信託資料（範圍：保單、信託；可隨時撤回）'},
+      {t:'T0',who:'AI 助理',txt:'完成盤點，整理三類資金來源並試算照護缺口'}
+    ]
+  };
+}
+S=fresh();
+function addLog(t,who,txt){S.log.push({t:t,who:who,txt:txt})}
+
+/* ---------- domain ---------- */
+function calc(){var m=Math.max(0,S.spend-GOV);return {monthly:m,total:m*12*S.years,months:m?Math.floor(ASSET/m):0}}
+function evalCase(c){
+  var g1=[{ok:S.insured,txt:'保險公司已依保單條款核定並入帳',who:'保險公司'}];
+  var g2=[
+    {ok:c.wl,txt:'收款對象在白名單內',who:'受託人'},
+    {ok:true,txt:'服務項目屬信託允付用途（'+c.item+'）',who:'受託人'},
+    {ok:c.amount<=S.cap,txt:'請款金額不超過契約本期上限 '+fmt(S.cap),who:'受託人'},
+    {ok:true,txt:'服務期間在契約期間內',who:'受託人'}
+  ];
+  var g3=[{ok:!c.dup,txt:'憑證齊全，未與前期重複請款',who:'服務機構'}];
+  var s1=g1.every(function(x){return x.ok}),s2=g2.every(function(x){return x.ok}),s3=g3.every(function(x){return x.ok});
+  var all=s1&&s2&&s3, kind=all?'ready':(!c.wl?'blocked':'flagged');
+  return {g1:g1,g2:g2,g3:g3,s1:s1,s2:s2,s3:s3,all:all,kind:kind};
+}
+function caseStatus(c){
+  if(c.final)return c.final;
+  return evalCase(c).kind;
+}
+var STAT={
+  ready:['p-teal','可核准'],flagged:['p-warn','轉人工覆核'],blocked:['p-crit','已攔截'],
+  paid:['p-ok','已付款'],returned:['p-wait','已退回補件'],rejected:['p-crit','已拒絕']
+};
+function pill(k){var s=STAT[k];return '<span class="pill '+s[0]+'">'+s[1]+'</span>'}
+
+/* ---------- actions ---------- */
+function actTrust(){
+  if(S.trustSigned)return;
+  S.trustSigned=true;
+  addLog('T1','信託銀行','完成 KYC 與信託契約，指定信託監察人');
+  addLog('T1','保險公司','簽訂保險金信託契約（事故前預先洽訂）');
+}
+function actInsure(){
+  if(S.insured)return;
+  if(!S.trustSigned)actTrust();
+  S.insured=true;S.trustBal+=INS_PAY;
+  addLog('T2','保險公司','依保單條款完成核定（失能門檻與免責期）');
+  addLog('T2','保險公司','保險金 '+fmt(INS_PAY)+' 依事先約定入信託專戶');
+  addLog('T2','規則引擎','階段①保險核定事件已確認');
+}
+function actSubmit(){
+  if(S.submitted)return;
+  if(!S.insured)actInsure();
+  S.submitted=true;
+  addLog('T3','服務機構','提交請款：安心居家 9/1–9/15，'+fmt(18600)+'，附服務憑證');
+  var e=evalCase(S.cases[0]);
+  addLog('T3','規則引擎',e.all?'階段②③檢核通過，形成支付建議（C-001）':'C-001 未通過檢核，轉人工覆核');
+  addLog('T3','規則引擎','C-002 超過契約上限，已停止一般流程；C-003 非白名單，不產生支付指令');
+}
+function actApprove(id){
+  var c=S.cases.filter(function(x){return x.id===id})[0];
+  if(!c||c.final||!evalCase(c).all||S.revoked)return;
+  c.final='paid';S.trustBal-=c.amount;S.pop=true;
+  addLog('T3','受託人','覆核通過，依契約付款 '+fmt(c.amount)+' 至白名單帳戶（'+c.id+'）');
+  addLog('T3','通知','已通知授權家屬（僅可檢視）');
+}
+function actReturn(id,mode){
+  var c=S.cases.filter(function(x){return x.id===id})[0];
+  if(!c||c.final)return;
+  c.final=mode;
+  addLog('T3','受託人',(mode==='rejected'?'拒絕':'退回補件')+'：'+c.id+' '+c.org+'，'+fmt(c.amount));
+}
+
+/* ---------- story steps ---------- */
+var STEPS=[
+ {g:'T0 健康期・58 歲',t:'授權盤點',screen:'dash',say:'王先生授權後，AI 只負責整理保單與信託資料，並先呈現可運用資產與缺口，不先推銷保單。',run:function(){}},
+ {g:'T0 健康期・58 歲',t:'試算照護缺口',screen:'gap',say:'每項假設都標示來源，公式固定，由計算工具執行，不由語言模型心算。拖曳滑桿可看缺口即時變化。',run:function(){}},
+ {g:'T0 健康期・58 歲',t:'比較三種資金方案',screen:'plans',say:'同一介面並列保險金信託、保單活化、保單借款與各自的法定限制。AI 只整理比較，不替客戶決定，也不推薦特定保單。',run:function(){}},
+ {g:'T1 規劃期・59 歲',t:'設定照護信託規則',screen:'trust',say:'事故前先訂好用途、額度與白名單。信託監察人管資金，意定監護受任人管人身照護，由不同角色各司其職。',run:actTrust},
+ {g:'T2 風險發生・67 歲',t:'保險核定，保險金入信託專戶',screen:'pay',say:'保險公司依條款核定（CMS 等級僅作需求參考），保險金依事先約定直接進信託專戶，不經個人帳戶。',run:actInsure},
+ {g:'T3 照護期・67–75 歲',t:'機構請款與三階段驗證',screen:'pay',say:'保險核定、信託允付條件、服務憑證三者全部通過才形成支付建議。超額與非白名單案件在這一步被擋下。',run:actSubmit},
+ {g:'T3 照護期・67–75 歲',t:'受託人覆核並付款',screen:'pay',say:'平台只形成建議，由合格受託人覆核後付款給白名單機構。家屬依授權檢視，異常案件隨時可停。',run:function(){actApprove('C-001')}},
+ {g:'T4 終止後・傳承',t:'稽核軌跡全程留存',screen:'audit',say:'每一步都有紀錄，供家屬與監理檢視。契約終止或身故後，剩餘信託財產依約分配。',run:function(){}}
+];
+function go(i){
+  i=Math.max(0,Math.min(STEPS.length-1,i));
+  var keep={view:S.view,focus:S.focus,cap:S.cap};
+  S=fresh();S.view=keep.view;S.focus=keep.focus;S.cap=(i===0?25000:keep.cap);
+  for(var j=0;j<=i;j++)STEPS[j].run();
+  S.step=i;S.screen=STEPS[i].screen;
+  render();
+}
+
+/* ---------- app screens ---------- */
+var NAV=[['dash','總覽','overview'],['gap','試算','calculator'],['plans','方案','compare'],['trust','信託','vault'],['pay','付款','card'],['audit','紀錄','chain']];
+var TITLE={dash:'我的照護財務儀表板',gap:'照護資金缺口試算',plans:'照護資金方案比較',trust:'照護信託規則',pay:'照護服務付款與監察',audit:'稽核軌跡與授權'};
+
+function sDash(){
+  var c=calc();
+  var h='<div class="kpi-row">'+
+   '<div class="tile hero"><span class="lbl">可運用照護資產</span><span class="big num">'+fmt(ASSET)+'</span><span class="lbl">含保單與信託規劃</span></div>'+
+   '<div class="tile warn"><span class="lbl">照護缺口（'+S.years+'年）</span><span class="mid num">'+fmt(c.total)+'</span><span class="lbl">每月缺口 '+fmt(c.monthly)+'</span></div>'+
+   '<div class="tile mo"><span class="lbl">資金可支應</span><span class="mid num">'+c.months+' 個月</span><span class="lbl">資產 ÷ 每月缺口</span></div>'+
+  '</div>';
+  h+='<div class="card"><h4>'+icon('coins','var(--g3)',22,'var(--g3s)')+'資金來源與用途</h4>'+
+   src('終身壽險保價金',1850000,100,'var(--g2)')+
+   src('預估失能／長照給付',900000,900000/1850000*100,'var(--g1)')+
+   src('可投入信託現金',530000,530000/1850000*100,'var(--g3)')+'</div>';
+  h+='<div class="ai"><div class="t"><b>'+icon('ai','var(--g1)',26,'var(--surface)')+'AI 盤點助理</b><span style="display:flex;align-items:center;gap:8px;font-size:12px">使用 AI<button class="sw" role="switch" aria-checked="'+S.ai+'" aria-label="使用 AI 盤點" data-a="ai"></button></span></div>';
+  if(S.ai){
+    h+='<div class="chips"><span class="chip yes">盤點保單</span><span class="chip yes">試算缺口</span><span class="chip yes">比較方案</span><span class="chip yes">監察提醒</span></div>'+
+       '<div class="chips"><span class="chip no">不判定失能</span><span class="chip no">不核准理賠</span><span class="chip no">不推薦特定保單</span><span class="chip no">不移轉資金</span></div>';
+  }else{
+    h+='<p class="note" style="margin:0;color:var(--ink)">已改為人工顧問盤點，試算使用固定試算表。你可以隨時再開啟 AI。</p>';
+  }
+  h+='</div>';
+  h+='<button class="cta" data-a="nav" data-v="gap">試算我的照護缺口</button>';
+  h+='<p class="note" style="margin:0">示意資料｜AI 僅整理資訊與情境試算，實際承作依金融機構審查。</p>';
+  return h;
+}
+function src(name,v,w,col){
+  return '<div class="src"><div class="r"><b>'+name+'</b><span class="num">'+fmt(v)+'</span></div><div class="bar"><i style="width:'+w.toFixed(1)+'%;background:'+col+'"></i></div></div>';
+}
+function sGap(){
+  var c=calc();
+  var h='<div class="card"><h4>'+icon('elder','var(--g1)',22,'var(--g1s)')+'照護情境</h4><div class="seg2"><span class="on">CMS 第 4 級</span><span class="on">一般戶</span></div>'+
+   '<div style="height:12px"></div>'+
+   '<div class="field"><div class="top"><span class="lbl">每月照護總支出（設算）</span><b class="num" id="o-sp">'+fmt(S.spend)+'</b></div><input type="range" id="sp" min="25000" max="50000" step="500" value="'+S.spend+'" aria-label="每月照護總支出"><span class="note">外籍家庭看護約 2.5 萬至 3.5 萬元，機構照顧更高。</span></div>'+
+   '<div class="field"><div class="top"><span class="lbl">預估照護期間</span><b class="num" id="o-yr">'+S.years+' 年</b></div><input type="range" id="yr" min="1" max="10" step="1" value="'+S.years+'" aria-label="預估照護期間"></div></div>';
+  h+='<div class="res"><div><span class="lbl">每月自籌缺口</span><div class="big num" id="o-m" style="color:var(--warn)">'+fmt(c.monthly)+'</div></div>'+
+   '<div><span class="lbl" id="o-tl">'+S.years+' 年累計缺口</span><div class="mid num" id="o-t">'+fmt(c.total)+'</div></div>'+
+   '<div id="o-bars">'+gapBars()+'</div>'+
+   '<p class="note" style="margin:0">示意試算，非理賠或給付核定。</p></div>';
+  h+='<div class="card"><h4>試算依據</h4>'+
+   '<div class="row"><span>長照 3.0 給付額度</span><b class="num">'+fmt(BENEFIT)+'</b></div>'+
+   '<div class="row"><span>一般戶自付比率</span><b>16%</b></div>'+
+   '<div class="row"><span>政府給付負擔</span><b class="num">'+fmt(GOV)+'</b></div>'+
+   '<p class="note" style="margin:8px 0 0">缺口＝每月總支出－政府給付負擔。實際依失能等級、照護型態與身分別而異。</p></div>';
+  return h;
+}
+function gapBars(){
+  var c=calc(),mx=Math.max(S.spend,1);
+  return rb('每月總支出',S.spend,S.spend/mx*100,'var(--lake)')+rb('政府給付負擔',GOV,Math.min(GOV,S.spend)/mx*100,'var(--g2)')+rb('家庭自籌',c.monthly,c.monthly/mx*100,'var(--g3)');
+}
+function rb(l,v,w,col){return '<div class="rbar" style="margin-bottom:7px"><span>'+l+'</span><div class="bar"><i style="width:'+w.toFixed(1)+'%;background:'+col+'"></i></div><em class="num">'+Math.round(v).toLocaleString('en-US')+'</em></div>'}
+function updGap(){
+  var c=calc();
+  $('#o-sp').textContent=fmt(S.spend);$('#o-yr').textContent=S.years+' 年';
+  $('#o-m').textContent=fmt(c.monthly);$('#o-tl').textContent=S.years+' 年累計缺口';$('#o-t').textContent=fmt(c.total);
+  $('#o-bars').innerHTML=gapBars();
+}
+var PLANS=[
+ {id:'A',n:'方案 A｜保險金信託',col:'2',ico:'contract',use:'事故前預先簽訂，保險金依約入信託專戶',lim:'限死亡／失能保險金；須事故發生前簽訂',tag:'事前規劃',tc:'p-teal',
+  det:'保險法 §138-2：要保人與被保險人須為同一人；受益人以被保險人、未成年人、受監護宣告尚未撤銷者為限。逐案由金融機構依條款確認。'},
+ {id:'B',n:'方案 B｜保單活化',col:'1',ico:'policy',use:'同公司壽險轉為長照、醫療或年金險',lim:'可能影響原有保障；須保險公司說明',tag:'需人員說明',tc:'p-wait',
+  det:'須保戶自行提出，2024 年全年僅 11 件。保單轉換不得就退補差額給付業務員額外佣酬，因此市場上資訊不足。平台只做中性盤點。'},
+ {id:'C',n:'方案 C｜保單借款',col:'3',ico:'coins',use:'以保價金質借取得現金',lim:'本息逾保價金將停效（§120）',tag:'短期備援',tc:'p-warn',
+  det:'保險法 §120：借款本息超過保單價值準備金時，保險人應於 30 日前書面通知，逾期未返還契約效力停止。平台不核准借款。'}
+];
+function sPlans(){
+  var h='';
+  PLANS.forEach(function(p){
+    var open=S.plan===p.id;
+    h+='<div class="plan"><button data-a="plan" data-v="'+p.id+'" aria-expanded="'+open+'"><div class="ph" style="background:var(--g'+p.col+'s);color:var(--ink)"><span>'+icon(p.ico,'var(--g'+p.col+')',26,'var(--surface)')+p.n+'</span><span style="color:var(--g'+p.col+')">'+(open?'收合':'展開')+'</span></div>'+
+     '<div class="pb"><div><div class="k">用途</div><p>'+p.use+'</p></div><div><div class="k">限制</div><p>'+p.lim+'</p></div><span class="tag pill '+p.tc+'">'+p.tag+'</span></div></button>'+
+     (open?'<div class="pd"><span>'+p.det+'</span><button class="cta ghost" data-a="refer" style="padding:8px">請合格人員說明</button></div>':'')+'</div>';
+  });
+  h+='<div class="card"><div class="row"><span>自有資金</span><b>現金／存款可直接投入信託專戶</b></div></div>';
+  h+='<p class="note" style="margin:0">AI 僅整理比較與來源，不推薦特定保單；申請請由保險公司或信託銀行合格人員辦理。</p>';
+  return h;
+}
+function sTrust(){
+  var ed=!S.insured;
+  var h='<div class="card"><h4>'+icon('contract','var(--g2)',22,'var(--g2s)')+'信託規則（事故前設定）</h4>'+
+   '<div class="row"><span>受益人</span><b>王先生（被保險人）</b></div>'+
+   '<div class="row"><span>資金來源</span><b>保險金＋自有資金</b></div>'+
+   '<div class="row" style="align-items:flex-start"><span>允付用途</span><span class="chips" style="justify-content:flex-end"><span class="chip">居家服務</span><span class="chip">機構照顧</span><span class="chip">輔具</span><span class="chip">出院準備</span></span></div>'+
+   '<div class="row"><span>契約本期上限</span><span class="stepper"><button data-a="cap" data-v="-5000" aria-label="降低上限"'+(ed?'':' disabled')+'>−</button><b class="num" style="min-width:84px;text-align:center">'+fmt(S.cap)+'</b><button data-a="cap" data-v="5000" aria-label="提高上限"'+(ed?'':' disabled')+'>＋</button></span></div>'+
+   '<div class="row" style="align-items:flex-start"><span>收款白名單</span><span class="chips" style="justify-content:flex-end"><span class="chip yes">安心居家（示意）</span><span class="chip yes">幸福到宅（示意）</span></span></div>'+
+   '<p class="note" style="margin:8px 0 0">'+(ed?'試試調低上限，再按「下一步」到步驟 6，看請款案件如何被攔下。步驟 1 會還原為 NT$25,000。':'事故發生後，契約條件不可由使用者單方調整。')+'</p></div>';
+  h+='<div class="two"><div class="role"><span class="lbl">人身照護</span><b>意定監護受任人</b><span>民法 §1113-2，須公證</span><span class="pill p-wait" style="align-self:flex-start">評估中</span></div>'+
+   '<div class="role"><span class="lbl">資金管理</span><b>信託監察人</b><span>信託法 §52</span><span class="pill '+(S.trustSigned?'p-ok':'p-wait')+'" style="align-self:flex-start">'+(S.trustSigned?'已指定長女（示意）':'待指定')+'</span></div></div>';
+  h+='<div class="banner i">保險金信託須在事故發生前簽訂（保險法 §138-2）。KYC 與簽約由金融機構辦理，平台不代為簽約。</div>';
+  h+='<button class="cta" data-a="sign"'+(S.trustSigned?' disabled':'')+'>'+(S.trustSigned?'已送交信託銀行與保險公司':'送交信託銀行與保險公司辦理')+'</button>';
+  return h;
+}
+function payRows(){
+  var c=S.cases[0],e=evalCase(c);
+  var st=function(ok,fail){return !S.submitted&&!ok?'wait':(ok?'ok':'fail')};
+  var r1=S.insured?'ok':'wait';
+  var r2=!S.submitted?'wait':(e.s2?'ok':'fail');
+  var r3=!S.submitted?'wait':(e.s3?'ok':'fail');
+  return [r1,r2,r3];
+}
+function sPay(){
+  var c=S.cases[0],e=evalCase(c),rs=payRows(),h='';
+  var lab={ok:['p-ok','已通過'],wait:['p-wait','等待中'],fail:['p-crit','未通過']};
+  if(!S.insured){
+    h+='<div class="banner i">尚未發生保險事故。保險公司依條款完成核定後，這裡會開始顯示給付與支付進度。</div>';
+  }
+  h+='<div class="card"><h4>'+icon('shield','var(--g1)',22,'var(--g1s)')+'三階段事件驗證</h4><div class="st3">'+
+   it(1,'保險核定事件','保險公司｜失能門檻與免責期',rs[0],lab)+
+   it(2,'信託允付條件','受託人｜用途、期間、額度、收款對象',rs[1],lab)+
+   it(3,'服務履約憑證','服務機構｜期間、項目、金額與憑證',rs[2],lab)+
+   '</div><p class="note" style="margin:8px 0 0">三者全部通過才形成支付建議，缺一不付。</p></div>';
+  var f=c.final;
+  var s3='pending',s3t='待信託銀行依契約確認';
+  if(S.submitted){
+    if(f==='paid'){s3='ok';s3t='受託人已核准'}
+    else if(f==='returned'||f==='rejected'){s3='fail';s3t=f==='rejected'?'受託人已拒絕':'已退回補件'}
+    else if(e.all){s3='active';s3t='待信託銀行依契約確認'}
+    else{s3='fail';s3t='已停止一般流程，轉人工覆核'}
+  }
+  var s1=S.submitted?'ok':'pending', s2=S.submitted?(e.s2&&e.s3?'ok':'fail'):'pending', s4=f==='paid'?'ok':'pending';
+  var pr=function(cls,n,t,s){return '<div class="s '+(cls==='pending'?'':cls)+'"><span class="d">'+(cls==='ok'?'✓':cls==='fail'?'!':n)+'</span><div><b>'+t+'</b><small>'+s+'</small></div></div>'};
+  h+='<div class="card"><h4>本期支付進度</h4><div class="prog">'+
+   pr(s1,1,'服務完成',S.submitted?c.org+' '+c.period:'等待機構提交請款')+
+   pr(s2,2,'憑證檢核','資格・額度・期間・重複請款')+
+   pr(s3,3,'受託人覆核',s3t)+
+   pr(s4,4,'款項撥付',f==='paid'?'已撥付 '+fmt(c.amount)+' 至白名單帳戶':'預定支付 '+fmt(c.amount))+'</div></div>';
+  if(S.submitted&&!e.all&&!f){h+='<div class="banner w">異常案件停止一般流程，轉人工覆核。系統不會自動完成不可回復的資金移轉。</div>'}
+  if(f==='paid'){h+='<div class="paidrow">'+STAMP(S.pop)+'<p><b>受託人已核准並撥付 '+fmt(c.amount)+'</b><br>已通知授權家屬（僅可檢視），完整紀錄見「紀錄」頁。</p></div>'}
+  h+='<div class="card"><h4>交易明細</h4>'+
+   '<div class="row"><span>服務機構</span><b>'+c.org+'</b></div>'+
+   '<div class="row"><span>服務期間</span><b class="num">'+c.period+'</b></div>'+
+   '<div class="row"><span>請款金額</span><b class="num">'+(S.submitted?fmt(c.amount):'—')+'</b></div>'+
+   '<div class="row"><span>契約本期上限</span><b class="num">'+fmt(S.cap)+'</b></div>'+
+   '<div class="row"><span>收款帳戶</span><b>'+(S.submitted?'白名單已驗證':'—')+'</b></div>'+
+   '<div class="row"><span>信託專戶餘額</span><b class="num">'+(S.insured?fmt(S.trustBal):'尚未入帳')+'</b></div>'+
+   '<div class="row"><span>授權家屬</span><b>僅可檢視</b></div></div>';
+  return h;
+}
+function it(n,t,s,r,lab){
+  return '<div class="it '+(r==='wait'?'':r)+'" style="--gc:var(--g'+n+');--gcs:var(--g'+n+'s)"><span class="n">'+(r==='ok'?'✓':r==='fail'?'!':n)+'</span><div class="tx"><b>'+t+'</b><small>'+s+'</small></div><span class="pill '+lab[r][0]+'">'+lab[r][1]+'</span></div>';
+}
+function sAudit(){
+  var h='';
+  if(S.revoked)h+='<div class="banner c">已撤回授權：停止新的資料存取與流程，僅保留依法應保存的稽核紀錄。</div>';
+  h+='<div class="card"><h4>'+icon('chain','var(--g2)',22,'var(--g2s)')+'稽核軌跡</h4><div class="tl">';
+  S.log.slice().reverse().forEach(function(l){h+='<div class="e"><time><i style="background:'+STC[l.t]+'"></i>'+l.t+'</time><div><b>'+l.who+'</b><br>'+l.txt+'</div></div>'});
+  h+='</div></div>';
+  h+='<div class="card"><h4>'+icon('family','var(--g1)',22,'var(--g1s)')+'授權管理</h4>'+
+   '<div class="row"><span>授權家屬</span><b>長女（示意）｜僅可檢視</b></div>'+
+   '<div class="row"><span>資料範圍</span><b>保單、信託、支付進度</b></div>'+
+   '<div class="row"><span>存證方式</span><b>API＋規則引擎（PoC）</b></div>'+
+   '<button class="cta ghost" data-a="revoke" style="margin-top:10px">'+(S.revoked?'恢復授權':'撤回授權')+'</button></div>';
+  h+='<p class="note" style="margin:0">聯盟鏈僅在多機構共同維護狀態時選配，鏈上只存摘要與狀態，不存健康資料。</p>';
+  return h;
+}
+var SCR={dash:sDash,gap:sGap,plans:sPlans,trust:sTrust,pay:sPay,audit:sAudit};
+
+/* ---------- trustee workstation ---------- */
+function tw(){
+  var sub=S.submitted;
+  var pending=sub?S.cases.filter(function(c){return !c.final}).length:0;
+  var h='<div class="tw-bar">'+SEAL(22)+'<b>CareChain Pay<em>・受託人覆核工作台</em></b><span>信託銀行端（示意）</span></div><div class="tw-body">';
+  h+='<div class="strip">'+
+   '<div class="m">'+icon('vault','var(--g2)',36,'var(--g2s)')+'<div><span class="lbl">王先生信託專戶</span><b>'+(S.insured?fmt(S.trustBal):'尚未入帳')+'</b></div></div>'+
+   '<div class="m">'+icon('contract','var(--g2)',36,'var(--g2s)')+'<div><span class="lbl">契約本期上限</span><b>'+fmt(S.cap)+'</b></div></div>'+
+   '<div class="m">'+icon('whitelist','var(--g1)',36,'var(--g1s)')+'<div><span class="lbl">白名單機構</span><b>2 家</b></div></div>'+
+   '<div class="m">'+icon('trustee','var(--g3)',36,'var(--g3s)')+'<div><span class="lbl">待覆核案件</span><b style="color:'+(pending?'var(--warn)':'inherit')+'">'+pending+' 件</b></div></div></div>';
+  if(S.revoked)h+='<div class="banner c">本人已撤回授權，新的資料存取與支付流程已暫停。核准功能停用，後續由金融機構依身分驗證與風控程序處理。</div>';
+  if(!sub){
+    h+='<div class="empty"><b style="color:var(--ink)">目前沒有待覆核案件</b><span>'+(S.insured?'保險金 '+fmt(INS_PAY)+' 已依約入專戶，等待照護機構提交請款。':(S.trustSigned?'信託契約已簽訂，等待保險公司完成核定。':'信託契約尚未簽訂。'))+'</span></div>';
+    h+='<div class="panel"><h5>專戶異動</h5><div class="chk">'+
+      (S.insured?'<div class="c"><span class="ic">'+ic('check',2.4)+'</span><span>保險金依約入專戶</span><small class="num">+'+fmt(INS_PAY)+'</small></div>':'<div class="c" style="grid-template-columns:1fr"><span class="note">尚無異動</span></div>')+
+      '</div></div>';
+  }else{
+    var sel=S.cases.filter(function(c){return c.id===S.sel})[0]||S.cases[0];
+    h+='<div class="tgrid"><div class="queue">';
+    S.cases.forEach(function(c){
+      h+='<button class="qi'+(c.id===sel.id?' on':'')+'" data-a="sel" data-v="'+c.id+'"><span class="a"><span>'+c.id+'</span><span class="num">'+c.period+'</span></span><b>'+c.org+'</b><span class="a"><span class="num" style="color:var(--ink);font-weight:600">'+fmt(c.amount)+'</span>'+pill(caseStatus(c))+'</span></button>';
+    });
+    h+='</div>'+detail(sel)+'</div>';
+  }
+  h+='<div class="panel"><h5 style="font-size:13px;display:flex;align-items:center;gap:8px">'+icon('chain','var(--g2)',22,'var(--g2s)')+'稽核軌跡（最近 4 筆）</h5><div class="tl">';
+  S.log.slice(-4).reverse().forEach(function(l){h+='<div class="e"><time><i style="background:'+STC[l.t]+'"></i>'+l.t+'</time><div><b>'+l.who+'</b>｜'+l.txt+'</div></div>'});
+  h+='</div></div></div>';
+  return h;
+}
+function detail(c){
+  var e=evalCase(c),st=caseStatus(c);
+  var gate=function(n,t,ok,k){return '<div class="g1 '+(ok?'ok':'x')+'" style="--gc:var(--g'+k+')"><span style="width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:'+(ok?'rgba(255,255,255,.28)':'var(--crit)')+';color:'+(ok?'var(--on-gate)':'#fff')+'">'+ic(ok?'check':'x',2.4).replace('<svg','<svg style="width:12px;height:12px"')+'</span><span>'+n+' '+t+'</span></div>'};
+  var h='<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><span class="lbl">案件 '+c.id+'</span><h5>'+c.org+'</h5></div>'+pill(st)+'</div>';
+  h+='<div class="gate">'+gate('①','保險核定',e.s1,1)+gate('②','信託允付',e.s2,2)+gate('③','服務憑證',e.s3,3)+'</div>';
+  h+='<div><div class="row"><span>請款金額</span><b class="num">'+fmt(c.amount)+'</b></div><div class="row"><span>服務期間</span><b class="num">'+c.period+'</b></div></div>';
+  h+='<div class="chk">';
+  [['階段① 保險核定事件',e.g1],['階段② 信託允付條件',e.g2],['階段③ 服務履約憑證',e.g3]].forEach(function(g,k){
+    h+='<div class="g" style="color:var(--g'+(k+1)+')"><i style="background:var(--g'+(k+1)+')"></i>'+g[0]+'</div>';
+    g[1].forEach(function(x){h+='<div class="c'+(x.ok?'':' x')+'"><span class="ic">'+ic(x.ok?'check':'x',2.4)+'</span><span>'+x.txt+'</span><small>'+x.who+'</small></div>'});
+  });
+  h+='</div>';
+  if(c.final==='paid')h+='<div class="paidrow">'+STAMP(S.pop)+'<p><b>已依契約付款 '+fmt(c.amount)+'</b><br>款項撥付至白名單帳戶，並通知授權家屬。</p></div>';
+  else if(c.final)h+='<div class="banner i">此案件已'+(c.final==='rejected'?'拒絕':'退回補件')+'，已寫入稽核軌跡。</div>';
+  else if(e.kind==='ready')h+='<div class="banner o">三階段全部通過，已形成支付建議。實際給付由受託人依契約及內控核准。</div>';
+  else if(e.kind==='blocked')h+='<div class="banner c">收款對象不在白名單內，系統不產生支付指令。請確認資格或更正收款資料。</div>';
+  else h+='<div class="banner w">已停止一般流程並標記差異。請與服務機構覆核、補正或拒絕。</div>';
+  if(!c.final){
+    h+='<div class="acts">'+
+      (e.kind==='ready'?'<button class="btn ok" data-a="approve" data-v="'+c.id+'"'+(S.revoked?' disabled':'')+'>'+SEAL(18)+'蓋章核准 '+fmt(c.amount)+'</button>':'')+
+      '<button class="btn" data-a="return" data-v="'+c.id+'">退回補件</button>'+
+      '<button class="btn no" data-a="reject" data-v="'+c.id+'">拒絕</button></div>';
+  }
+  return h+'</div>';
+}
+
+/* ---------- render ---------- */
+function render(){
+  var st=STEPS[S.step];
+  var tk=st.g.slice(0,2),col=STC[tk];
+  var cs=$('#c-stage');cs.innerHTML='<i></i>'+st.g;cs.style.setProperty('--stage',col);cs.style.setProperty('--stage-soft',soft(col));
+  $('#brandseal').innerHTML=SEAL(38);$('#c-title').textContent=(S.step+1)+'／'+STEPS.length+'　'+st.t;$('#c-say').textContent=st.say;
+  $('#b-next').disabled=S.step>=STEPS.length-1;
+  $('#b-focus').textContent=S.focus?'顯示步驟列':'專注模式';
+  var sh=$('#shell');sh.dataset.view=S.view;sh.classList.toggle('focus',S.focus);
+  document.querySelectorAll('.seg button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.v===S.view))});
+  $('#ahead').innerHTML='<header class="ahdr"><div><small>'+SEAL(16)+'CareChain Pay</small><h1>'+TITLE[S.screen]+'</h1></div><span class="who">王先生（示意）</span></header>';
+  var body=$('#abody');body.innerHTML=SCR[S.screen]();body.scrollTop=0;
+  $('#nav').innerHTML=NAV.map(function(n){return '<button data-a="nav" data-v="'+n[0]+'" class="'+(S.screen===n[0]?'on':'')+'"'+(S.screen===n[0]?' aria-current="page"':'')+'><span class="ib">'+icon(n[2],S.screen===n[0]?'var(--g3)':'var(--muted)',22)+'</span><span>'+n[1]+'</span></button>'}).join('');
+  $('#tw').innerHTML=tw();
+  S.pop=false;
+  var groups=[],cur=null;
+  STEPS.forEach(function(s,i){if(!cur||cur.g!==s.g){cur={g:s.g,items:[]};groups.push(cur)}cur.items.push(i)});
+  $('#steps').innerHTML=groups.map(function(g){
+    var gc=STC[g.g.slice(0,2)];
+    return '<div class="grp" style="--stage:'+gc+';--stage-soft:'+soft(gc)+'"><div class="gl"><i style="background:'+gc+'"></i>'+g.g+'</div>'+g.items.map(function(i){
+      var cls=i===S.step?' on':(i<S.step?' done':'');
+      return '<button class="stp'+cls+'" data-a="step" data-v="'+i+'"><i>'+(i<S.step?'✓':i+1)+'</i><span>'+STEPS[i].t+'</span></button>';
+    }).join('')+'</div>';
+  }).join('');
+}
+function renderKeep(){ /* re-render without resetting app scroll */
+  var b=$('#abody'),y=b.scrollTop;render();$('#abody').scrollTop=y;
+}
+
+/* ---------- events ---------- */
+var timer=null;
+function stopAuto(){if(timer){clearInterval(timer);timer=null}$('#b-auto').textContent='自動播放'}
+function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(function(){t.classList.remove('on')},2200)}
+document.addEventListener('click',function(ev){
+  var el=ev.target.closest('[data-a]');if(!el||el.disabled)return;
+  var a=el.dataset.a,v=el.dataset.v;
+  if(a==='step'){stopAuto();go(+v)}
+  else if(a==='next'){stopAuto();go(S.step+1)}
+  else if(a==='prev'){stopAuto();go(S.step-1)}
+  else if(a==='auto'){
+    if(timer){stopAuto();return}
+    if(S.step>=STEPS.length-1)go(0);
+    $('#b-auto').textContent='暫停播放';
+    timer=setInterval(function(){if(S.step>=STEPS.length-1){stopAuto();return}go(S.step+1)},6500);
+  }
+  else if(a==='focus'){S.focus=!S.focus;render()}
+  else if(a==='view'){S.view=v;render()}
+  else if(a==='nav'){S.screen=v;render()}
+  else if(a==='ai'){S.ai=!S.ai;renderKeep()}
+  else if(a==='plan'){S.plan=S.plan===v?null:v;renderKeep()}
+  else if(a==='refer'){toast('已轉介合格人員說明（示意）')}
+  else if(a==='cap'){if(!S.insured){S.cap=Math.min(35000,Math.max(15000,S.cap+(+v)));renderKeep()}}
+  else if(a==='sign'){actTrust();renderKeep();toast('已送交辦理（示意）')}
+  else if(a==='sel'){S.sel=v;render()}
+  else if(a==='approve'){actApprove(v);renderKeep();toast('已核准付款（示意）')}
+  else if(a==='return'){actReturn(v,'returned');renderKeep()}
+  else if(a==='reject'){actReturn(v,'rejected');renderKeep()}
+  else if(a==='revoke'){S.revoked=!S.revoked;addLog('T3','本人',S.revoked?'撤回授權，停止新的資料存取與流程':'恢復授權');renderKeep()}
+});
+document.addEventListener('input',function(ev){
+  if(ev.target.id==='sp'){S.spend=+ev.target.value;updGap()}
+  else if(ev.target.id==='yr'){S.years=+ev.target.value;updGap()}
+});
+document.addEventListener('keydown',function(ev){
+  if(ev.target.tagName==='INPUT')return;
+  if(ev.key==='ArrowRight'){stopAuto();go(S.step+1)}
+  else if(ev.key==='ArrowLeft'){stopAuto();go(S.step-1)}
+});
+
+if(window.innerWidth<1180)S.view='app';
+go(0);
+window.CCP={go:go,setScreen:function(s){S.screen=s;render()},setView:function(v){S.view=v;render()},setFocus:function(f){S.focus=f;render()},select:function(id){S.sel=id;render()},approve:function(id){actApprove(id);render()},setCap:function(c){S.cap=c;render()},state:function(){return S}};
+})();
+</script>
